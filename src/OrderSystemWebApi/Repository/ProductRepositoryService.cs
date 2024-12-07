@@ -20,42 +20,46 @@ public class ProductRepositoryService : IProductRepositoryService
     public async Task<Product> CreateProduct(WriteProductRequestDTO request)
     {
         var product = request.ToProduct();
+
         await _context.Products.AddAsync(product);
+
+        await _context.SaveChangesAsync();
+        
         return product;
     }
 
-    public async Task DeleteProduct(Guid productId)
+    public async Task DeleteProductAsync(Guid productId)
     {
-        var product = await ReadById(productId);
+        var product = await GetByIdAsync(productId) ?? throw Null("Id");
+
         _context.Remove(product);
+
+        await _context.SaveChangesAsync();
     }
 
-    public async Task<bool> IsExistById(Guid id)
-    {
-        return await _context.Products.AnyAsync(p => p.Id == id);
-    }
-
-    public IEnumerable<Product> ReadAll()
+    public IEnumerable<Product> GetAll()
     {
         return _context.Products;
     }
 
-    public async Task<Product> ReadById(Guid id)
+    public async Task<Product?> GetByIdAsync(Guid id)
     {
-        var product = await _context.Products.FindAsync(id) ?? throw Null(nameof(id));
+        var product = await _context.Products.FindAsync(id);
+
         return product;
     }
 
-    public async Task UpdateProduct(Guid productId, WriteProductRequestDTO request)
+    public async Task UpdateProductAsync(Guid productId, WriteProductRequestDTO request)
     {
-        var product = await ReadById(productId);
+        var product = await GetByIdAsync(productId) ?? throw Null("Id");
 
         _context.Products.Entry(product).CurrentValues.SetValues(request);
+
+        await _context.SaveChangesAsync();
     }
 
     private ArgumentNullException Null(string type)
     {
         return new ArgumentNullException($"'{type}' not found.");
-
     }
 }

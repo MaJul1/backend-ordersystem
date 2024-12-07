@@ -6,11 +6,9 @@ namespace OrderSystemWebApi.Interfaces;
 
 public interface IProductRepositoryService
 {
-    Task<Product> ReadById(Guid id);
-    IEnumerable<Product> ReadAll();
+    Task<Product?> GetByIdAsync(Guid id);
+    IEnumerable<Product> GetAll();
     Task<Product> CreateProduct(WriteProductRequestDTO request);
-    Task UpdateProduct(Guid productId, WriteProductRequestDTO request);
-    Task DeleteProduct(Guid productId);
-    Task<bool> IsExistById(Guid id);
-
+    Task UpdateProductAsync(Guid productId, WriteProductRequestDTO request);
+    Task DeleteProductAsync(Guid productId);
 }
