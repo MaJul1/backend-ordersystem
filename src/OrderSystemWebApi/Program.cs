@@ -10,9 +10,10 @@ builder.Services.AddSwaggerGen();
 
 builder.ConfigureDatabase();
 builder.ConfigureIdentity();
-builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false)
-    .AddJsonFile($"appsetings{builder.Environment.EnvironmentName}.json", optional: true);
+builder.ConfigureAppSettingJsons();
+builder.ConfigureCustomServices();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
