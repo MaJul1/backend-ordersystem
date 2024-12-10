@@ -6,8 +6,7 @@ namespace OrderSystemWebApi.DTO;
 public class LogInRequest
 {
     [Required]
-    [EmailAddress]
-    public string Email {get; set;} = null!;
+    public string Username {get; set;} = null!;
 
     [Required]
     public string Password {get; set;} = null!;

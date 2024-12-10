@@ -1,9 +1,8 @@
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrderSystemWebApi.DTO;
 using OrderSystemWebApi.Interfaces;
 using OrderSystemWebApi.Mapper;
-using OrderSystemWebApi.Repository;
 
 namespace OrderSystemWebApi.Controllers
 {
@@ -18,6 +17,7 @@ namespace OrderSystemWebApi.Controllers
             _productService = productService;
         }
 
+        [Authorize(Roles = "Admin,Moderator,User")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ReadProductRequestDTO>>> GetAll()
         {
@@ -28,6 +28,7 @@ namespace OrderSystemWebApi.Controllers
             return await Task.FromResult(Ok(filteredProducts));
         }
 
+        [Authorize(Roles = "Admin,Moderator,User")]
         [HttpGet("{Id:guid}")]
         public async Task<ActionResult<ReadProductRequestDTO>> GetById(Guid Id)
         {
@@ -39,6 +40,7 @@ namespace OrderSystemWebApi.Controllers
             return product.ToReadProductDTO();
         }
 
+        [Authorize(Roles = "Admin,Moderator")]
         [HttpPost]
         public async Task<ActionResult<ReadProductRequestDTO>> Create([FromBody] WriteProductRequestDTO request)
         {
@@ -47,6 +49,7 @@ namespace OrderSystemWebApi.Controllers
             return CreatedAtAction(nameof(GetById), new { product.Id }, product.ToReadProductDTO());
         }
 
+        [Authorize(Roles = "Admin,Moderator")]
         [HttpPut("{Id:guid}")]
         public async Task<IActionResult> Update(Guid Id, [FromBody] WriteProductRequestDTO request)
         {
@@ -60,6 +63,7 @@ namespace OrderSystemWebApi.Controllers
             return Ok("Product operation completed successfully.");
         }
 
+        [Authorize(Roles = "Admin,Moderator")]
         [HttpDelete("{Id:guid}")]
         public async Task<IActionResult> DeleteProduct(Guid Id)
         {

@@ -6,18 +6,14 @@ using OrderSystemWebApi.Models;
 namespace OrderSystemWebApi.Mapper;
 
 public static class UserMapper
-{
+{   
     public static User ToUser(this WriteUserRequestDTO request)
-        => ToUser(request, null);
-    
-    public static User ToUser(this WriteUserRequestDTO request, Guid? id)
     {
         User user = new()
         {
             FirstName = request.FirstName,
             LastName = request.LastName,
-            UserName = request.Email,
-            Email = request.Email
+            UserName = request.Username,
         };
 
         return user;
@@ -31,7 +27,7 @@ public static class UserMapper
             Id = user.Id,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            Email = user.Email!
+            Username = user.UserName!
         };
 
         return readUser;

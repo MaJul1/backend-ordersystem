@@ -17,9 +17,6 @@ public static class IdentityConfigurator
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = true;
             options.Password.RequireLowercase = false;
-
-            // User settings
-            options.User.RequireUniqueEmail = true;
         })
         .AddEntityFrameworkStores<OrderSystemContext>()
         .AddDefaultTokenProviders();
