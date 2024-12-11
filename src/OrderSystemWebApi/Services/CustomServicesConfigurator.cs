@@ -11,5 +11,7 @@ public static class CustomServicesConfigurator
         builder.Services.AddScoped<IProductRepositoryService, ProductRepositoryService>();
         builder.Services.AddScoped<IUserRepositoryService, UserRepositoryService>();
         builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+        builder.Services.AddScoped<IOrderRepositoryService, OrderRepositoryService>();
+        builder.Services.AddScoped<IControllerServices, ControllerService>();
     }
 }

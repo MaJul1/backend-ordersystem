@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace OrderSystemWebApi.DTO;
+namespace OrderSystemWebApi.DTO.User;
 
 public class LogInRequest
 {

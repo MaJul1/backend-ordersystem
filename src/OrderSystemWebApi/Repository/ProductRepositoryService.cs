@@ -1,7 +1,6 @@
-using System;
 using Microsoft.EntityFrameworkCore;
 using OrderSystemWebApi.Context;
-using OrderSystemWebApi.DTO;
+using OrderSystemWebApi.DTO.Product;
 using OrderSystemWebApi.Interfaces;
 using OrderSystemWebApi.Mapper;
 using OrderSystemWebApi.Models;
@@ -61,5 +60,16 @@ public class ProductRepositoryService : IProductRepositoryService
     private ArgumentNullException Null(string type)
     {
         return new ArgumentNullException($"'{type}' not found.");
+    }
+
+    public async Task<List<Product>> GetRangeProductsByIdsAsync(Guid[] ids)
+    {
+        if (ids == null || ids.Length == 0)
+            return [];
+        
+        var products = _context.Products
+            .Where(p => ids.Contains(p.Id));
+
+        return await products.ToListAsync();
     }
 }

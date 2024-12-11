@@ -1,5 +1,4 @@
-using System;
-using OrderSystemWebApi.DTO;
+using OrderSystemWebApi.DTO.Product;
 using OrderSystemWebApi.Models;
 
 namespace OrderSystemWebApi.Mapper;

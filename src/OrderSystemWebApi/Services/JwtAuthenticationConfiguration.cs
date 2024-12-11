@@ -10,6 +10,7 @@ public static class JwtAuthenticationConfiguration
 {
     public static void ConfigureJwtAuthentication(this WebApplicationBuilder builder)
     {
+        
         builder.Services.AddAuthentication(option =>
         {
             option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

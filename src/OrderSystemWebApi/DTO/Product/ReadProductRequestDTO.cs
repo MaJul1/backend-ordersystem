@@ -1,6 +1,6 @@
 using System;
 
-namespace OrderSystemWebApi.DTO;
+namespace OrderSystemWebApi.DTO.Product;
 
 public class ReadProductRequestDTO
 {

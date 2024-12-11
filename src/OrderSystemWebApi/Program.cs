@@ -1,6 +1,3 @@
-using System.Runtime.InteropServices;
-using Microsoft.AspNetCore.Identity;
-using OrderSystemWebApi.Models;
 using OrderSystemWebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);

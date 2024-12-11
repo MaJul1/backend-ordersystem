@@ -1,9 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace OrderSystemWebApi.DTO;
+namespace OrderSystemWebApi.DTO.User;
 
-public class WriteUserRequestDTO
+public class RegisterUserRequestDTO
 {
     [Required(ErrorMessage = "First name is required.")]
     [Length(3, 120, ErrorMessage = "First name must be betweenn 3 and 120 characters.")]

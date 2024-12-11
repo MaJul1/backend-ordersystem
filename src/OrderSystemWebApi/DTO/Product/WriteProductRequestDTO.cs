@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace OrderSystemWebApi.DTO;
+namespace OrderSystemWebApi.DTO.Product;
 
 public class WriteProductRequestDTO
 {

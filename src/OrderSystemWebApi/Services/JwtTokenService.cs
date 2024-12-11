@@ -13,10 +13,12 @@ public class JwtTokenService : IJwtTokenService
 {
     private readonly IConfiguration _configuration;
     private readonly IUserRepositoryService _userService;
-    public JwtTokenService (IConfiguration configuration, IUserRepositoryService userService)
+    private readonly ILogger<JwtTokenService> _logger;
+    public JwtTokenService (IConfiguration configuration, IUserRepositoryService userService, ILogger<JwtTokenService> logger)
     {
         _configuration = configuration;
         _userService = userService;
+        _logger = logger;
     }
 
     public async Task<string> GenerateToken(User user)
@@ -43,5 +45,36 @@ public class JwtTokenService : IJwtTokenService
 
         return handler.WriteToken(token);
 
+    }
+
+    public async Task<string> GetIdAsync(string Token)
+    {
+        _logger.LogDebug("GetIdAsync(): Request received: Token = start->{token}<-end", Token);
+        var handler = new JwtSecurityTokenHandler();
+
+        var result = await handler.ValidateTokenAsync(Token, GetTokenValidationParameters());
+        
+        _logger.LogDebug("GetIdAsync(): The token validity result is {IsValid}", result.IsValid);
+        if (result.IsValid == false)
+            throw new ArgumentException("Token is invalid.");
+        
+        var id = result.Claims.FirstOrDefault(c => c.Key == ClaimTypes.NameIdentifier).Value;
+        return (string)id;
+    }
+
+    private TokenValidationParameters GetTokenValidationParameters()
+    {
+        var parameters = new TokenValidationParameters()
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidAudience = _configuration["Jwt:Audience"],
+            ValidIssuer = _configuration["Jwt:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]!))
+        };
+
+        return parameters;
     }
 }

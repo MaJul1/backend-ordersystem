@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Identity;
-using OrderSystemWebApi.DTO;
+using OrderSystemWebApi.DTO.User;
 using OrderSystemWebApi.Interfaces;
 using OrderSystemWebApi.Mapper;
 using OrderSystemWebApi.Models;
@@ -40,13 +40,13 @@ public class UserRepositoryService : IUserRepositoryService
         return user;
     }
 
-    public Task<IdentityResult> RegisterModeratorAsync(WriteUserRequestDTO request)
+    public Task<IdentityResult> RegisterModeratorAsync(RegisterUserRequestDTO request)
     {
         var result = Register(request, "Moderator");
         return result;
     }
 
-    public async Task<IdentityResult> UpdateUserInformation(Guid id, WriteUserRequestDTO request)
+    public async Task<IdentityResult> UpdateUserInformation(Guid id, RegisterUserRequestDTO request)
     {
         var updatedUser = await _userManager.FindByIdAsync(id.ToString());
 
@@ -56,13 +56,13 @@ public class UserRepositoryService : IUserRepositoryService
         return await _userManager.UpdateAsync(updatedUser);
     }
 
-    public Task<IdentityResult> RegisterUserAsync(WriteUserRequestDTO request)
+    public Task<IdentityResult> RegisterUserAsync(RegisterUserRequestDTO request)
     {
         var result = Register(request, "User");
         return result;
     }
 
-    private async Task<IdentityResult> Register(WriteUserRequestDTO request, string role)
+    private async Task<IdentityResult> Register(RegisterUserRequestDTO request, string role)
     {
         var user = request.ToUser();
 

@@ -1,13 +1,11 @@
-using System;
-using Microsoft.AspNetCore.Identity;
-using OrderSystemWebApi.DTO;
+using OrderSystemWebApi.DTO.User;
 using OrderSystemWebApi.Models;
 
 namespace OrderSystemWebApi.Mapper;
 
 public static class UserMapper
 {   
-    public static User ToUser(this WriteUserRequestDTO request)
+    public static User ToUser(this RegisterUserRequestDTO request)
     {
         User user = new()
         {

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrderSystemWebApi.DTO;
+using OrderSystemWebApi.DTO.Product;
 using OrderSystemWebApi.Interfaces;
 using OrderSystemWebApi.Mapper;
 
@@ -17,7 +17,7 @@ namespace OrderSystemWebApi.Controllers
             _productService = productService;
         }
 
-        [Authorize(Roles = "Admin,Moderator,User")]
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ReadProductRequestDTO>>> GetAll()
         {
@@ -28,7 +28,7 @@ namespace OrderSystemWebApi.Controllers
             return await Task.FromResult(Ok(filteredProducts));
         }
 
-        [Authorize(Roles = "Admin,Moderator,User")]
+        [Authorize]
         [HttpGet("{Id:guid}")]
         public async Task<ActionResult<ReadProductRequestDTO>> GetById(Guid Id)
         {
