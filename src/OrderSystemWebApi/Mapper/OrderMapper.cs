@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using OrderSystemWebApi.DTO.Order;
+using OrderSystemWebApi.DTO.Product;
 using OrderSystemWebApi.Interfaces;
 using OrderSystemWebApi.Models;
 
@@ -16,5 +18,25 @@ public static class OrderMapper
         };
 
         return order;
+    }
+
+    public static ReadOrderRequestDTO ToReadOrderDTO(this Order order)
+    {
+        ReadOrderRequestDTO ReadOrder = new()
+        {
+            Id = order.Id,
+            Buyer = Guid.Parse(order.UserId)
+        };
+
+        List<ReadProductRequestDTO> products = [];
+        
+        foreach(Product product in order.Products)
+        {
+            products.Add(product.ToReadProductDTO());
+        }
+
+        ReadOrder.ProductsOrdered = products;
+
+        return ReadOrder;
     }
 }
