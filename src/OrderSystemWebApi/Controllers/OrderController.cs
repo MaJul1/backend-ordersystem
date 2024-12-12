@@ -12,13 +12,23 @@ namespace OrderSystemWebApi.Controllers
     {
         private readonly IOrderRepositoryService _orderService;
         private readonly IControllerServices _controllerService;
-        public OrderController(IOrderRepositoryService orderRepositoryService, IControllerServices controllerServices)
+        private readonly IProblemService _problemService;
+        public OrderController(IOrderRepositoryService orderRepositoryService, IControllerServices controllerServices, IProblemService problemService)
         {
             _orderService = orderRepositoryService;
             _controllerService = controllerServices;
+            _problemService = problemService;
             
         }
 
+        /// <summary>
+        /// Creates a new order.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Invalid product id will be ignored. Should have atleast one valid product id. Authorization of any role is required.
+        /// </remarks>
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> CreateOrder([FromBody] OrderRequestDTO request)
@@ -29,7 +39,7 @@ namespace OrderSystemWebApi.Controllers
             }
             catch (ArgumentException e)
             {
-                return BadRequest(GetArgumentExceptionProblemDetails(e));
+                return BadRequest(_problemService.CreateBadRequestProblemDetails(e.Message, Request.Path));
             }
         }
 
@@ -40,20 +50,6 @@ namespace OrderSystemWebApi.Controllers
             await _orderService.CreateOrder(request, userId);
             
             return Ok("Order created.");
-        }
-
-        //TODO: create service for this.
-        private ProblemDetails GetArgumentExceptionProblemDetails(ArgumentException error)
-        {
-            var problemDetails = new ProblemDetails
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Argument Exception",
-                Detail = error.Message ?? "An argument was invalid.",
-                Instance = HttpContext.Request.Path
-            };
-
-            return problemDetails;
         }
     }
 }

@@ -12,13 +12,12 @@ namespace OrderSystemWebApi.Controllers
     {
         private readonly IUserRepositoryService _userService;
         private readonly IJwtTokenService _jwtTokenService;
-        private readonly ILogger _logger;
-        public UserController (IUserRepositoryService userService, IJwtTokenService jwtTokenService, ILogger<UserController> logger)
+        private readonly IProblemService _problemService;
+        public UserController (IUserRepositoryService userService, IJwtTokenService jwtTokenService, IProblemService problemService)
         {
             _userService = userService;
             _jwtTokenService = jwtTokenService;
-            _logger = logger;
-            
+            _problemService = problemService;   
         }
 
         /// <summary>
@@ -40,21 +39,25 @@ namespace OrderSystemWebApi.Controllers
             var user = await _userService.LogInUserAsync(request);
             
             if (user == null)
-                return Unauthorized();
+                return Unauthorized(_problemService.CreateUnauthorizeProblemDetails("Invalid username or password.", Request.Path));
             
             var token = await _jwtTokenService.GenerateToken(user);
 
             var response = user.ToLogInResponse(token);
+
             return Ok(response);
         }
 
         [HttpPost("register-user")]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterUserRequestDTO request)
         {
+            if (await _userService.IsUsernameAlreadyExists(request.Username))
+                return BadRequest(_problemService.CreateBadRequestProblemDetails($"Username '{request.Username}' already exists.", Request.Path));
+
             var result = await _userService.RegisterUserAsync(request);
 
             if (result.Succeeded == false)
-                return StatusCode(500, result.Errors.Select(e => e.Description));
+                return StatusCode(500, _problemService.CreateInternalServerErrorProblemDetails([.. result.Errors.Select(e => e.Description)], Request.Path));
 
             return Ok("User created succesfully.");
         }
@@ -63,10 +66,13 @@ namespace OrderSystemWebApi.Controllers
         [HttpPost("register-moderator")]
         public async Task<IActionResult> RegisterModerator([FromBody] RegisterUserRequestDTO request)
         {
+            if (await _userService.IsUsernameAlreadyExists(request.Username))
+                return BadRequest(_problemService.CreateBadRequestProblemDetails($"Username '{request.Username}' already exist.", Request.Path));
+
             var result = await _userService.RegisterModeratorAsync(request);
 
             if (result.Succeeded == false)
-                return StatusCode(500, result.Errors.Select(e => e.Description));
+                return StatusCode(500, _problemService.CreateInternalServerErrorProblemDetails([.. result.Errors.Select(e => e.Description)], Request.Path));
 
             return Ok("Moderator created successfully.");
         }

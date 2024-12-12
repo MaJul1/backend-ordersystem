@@ -12,4 +12,5 @@ public interface IUserRepositoryService
     Task<IdentityResult> UpdateUserInformation(Guid id, RegisterUserRequestDTO request);
     Task<IdentityResult> DeleteUser(Guid Id);
     Task<List<string>> GetRoles(User user);
+    Task<bool> IsUsernameAlreadyExists(string username);
 }

@@ -79,4 +79,10 @@ public class UserRepositoryService : IUserRepositoryService
         var roles = await _userManager.GetRolesAsync(user);
         return [.. roles];
     }
+
+    public async Task<bool> IsUsernameAlreadyExists(string username)
+    {
+        var result = await _userManager.FindByNameAsync(username);
+        return result != null;
+    }
 }

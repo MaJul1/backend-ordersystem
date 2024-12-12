@@ -11,10 +11,12 @@ namespace OrderSystemWebApi.Controllers
     public class ProductController : ControllerBase
     {
         private readonly IProductRepositoryService _productService;
+        private readonly IProblemService _problemService;
 
-        public ProductController(IProductRepositoryService productService)
+        public ProductController(IProductRepositoryService productService, IProblemService problemService)
         {
             _productService = productService;
+            _problemService = problemService;
         }
 
         [Authorize]
@@ -35,7 +37,7 @@ namespace OrderSystemWebApi.Controllers
             var product = await _productService.GetByIdAsync(Id);
 
             if (product == null)
-                return NotFound("Id not found");
+                return NotFound(_problemService.CreateNotFoundProblemDetails("Id not found.", Request.Path));
 
             return product.ToReadProductDTO();
         }
@@ -56,7 +58,7 @@ namespace OrderSystemWebApi.Controllers
             var product = await _productService.GetByIdAsync(Id);
 
             if (product == null)
-                return NotFound("Id not found");
+                return NotFound(_problemService.CreateNotFoundProblemDetails("Id not found.", Request.Path));
 
             await _productService.UpdateProductAsync(Id, request);
 
@@ -70,11 +72,11 @@ namespace OrderSystemWebApi.Controllers
             var product = await _productService.GetByIdAsync(Id);
 
             if (product == null)
-                return NotFound("Id not found");
+                return NotFound(_problemService.CreateNotFoundProblemDetails("Id not found.", Request.Path));
 
             await _productService.DeleteProductAsync(Id);
 
-            return Ok("Product operation completed successfully.");
+            return Ok("Product deleted.");
         }
     }
 }
