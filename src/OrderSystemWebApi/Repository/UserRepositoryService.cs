@@ -85,4 +85,10 @@ public class UserRepositoryService : IUserRepositoryService
         var result = await _userManager.FindByNameAsync(username);
         return result != null;
     }
+
+    public async Task<bool> IsUserIdExistsAsync(string userId)
+    {
+        var result = await _userManager.FindByIdAsync(userId);
+        return result != null;
+    }
 }

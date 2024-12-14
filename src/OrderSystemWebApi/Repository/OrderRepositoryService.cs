@@ -12,10 +12,12 @@ public class OrderRepositoryService : IOrderRepositoryService
 {
     private readonly IProductRepositoryService _productService;
     private readonly OrderSystemContext _context;
-    public OrderRepositoryService(IProductRepositoryService productRepositoryService, OrderSystemContext context)
+    private readonly IUserRepositoryService _userService;
+    public OrderRepositoryService(IProductRepositoryService productRepositoryService, OrderSystemContext context, IUserRepositoryService userService)
     {
         _productService = productRepositoryService;
         _context = context;
+        _userService = userService;
     }
 
     public async Task<Order> CreateOrder(OrderRequestDTO request, string userId)
@@ -46,8 +48,13 @@ public class OrderRepositoryService : IOrderRepositoryService
         return orders;
     }
 
-    public async Task<IEnumerable<Order>> GetAllOrdersByUserIdAsync(string userId)
+    public async Task<IEnumerable<Order>> GetAllUserOrdersAsync(string userId)
     {
+        var isUserExists = await _userService.IsUserIdExistsAsync(userId);
+
+        if (isUserExists == false)
+            throw new ArgumentException($"User with an id of {userId} not found");
+
         var userOrder = await _context.Orders
             .Where(o => o.UserId == userId)
             .Include(o => o.Products)

@@ -13,4 +13,5 @@ public interface IUserRepositoryService
     Task<IdentityResult> DeleteUser(Guid Id);
     Task<List<string>> GetRoles(User user);
     Task<bool> IsUsernameAlreadyExists(string username);
+    Task<bool> IsUserIdExistsAsync(string userId);
 }

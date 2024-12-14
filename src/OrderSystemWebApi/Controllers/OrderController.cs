@@ -14,12 +14,16 @@ namespace OrderSystemWebApi.Controllers
         private readonly IOrderRepositoryService _orderService;
         private readonly IControllerServices _controllerService;
         private readonly IProblemService _problemService;
-        public OrderController(IOrderRepositoryService orderRepositoryService, IControllerServices controllerServices, IProblemService problemService)
+        public OrderController
+        (
+            IOrderRepositoryService orderRepositoryService, 
+            IControllerServices controllerServices, 
+            IProblemService problemService
+        )
         {
             _orderService = orderRepositoryService;
             _controllerService = controllerServices;
             _problemService = problemService;
-            
         }
 
         /// <summary>
@@ -28,7 +32,7 @@ namespace OrderSystemWebApi.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         /// <remarks>
-        /// Invalid product id will be ignored. Should have atleast one valid product id. Authorization of any role is required.
+        /// Invalid product id will be ignored. Should have atleast one valid product id. Authorization is required.
         /// </remarks>
         [HttpPost]
         [Authorize]
@@ -62,16 +66,41 @@ namespace OrderSystemWebApi.Controllers
             var order = await _orderService.GetOrderById(id);
 
             if (order == null)
-                return NotFound();
+                return NotFound(_problemService.CreateNotFoundProblemDetails($"Order with an id of {id} is not found.", Request.Path));
 
             return Ok(order.ToReadOrderDTO());
         }
 
         [HttpGet("orders-by-user-id")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> GetOrdersByUserId([FromQuery] Guid userId)
+        [Authorize(Roles = "Admin,Moderator")]
+        public async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> GetUserOrders([FromQuery] Guid userId)
         {
-            var userOrders = await _orderService.GetAllOrdersByUserIdAsync(userId.ToString());
+            try
+            {
+                return await TryGetUserOrders(userId);
+            }
+            catch (ArgumentException e)
+            {
+                return BadRequest(_problemService.CreateNotFoundProblemDetails(e.Message, Request.Path));
+            }
+        }
+
+        [HttpGet("orders-by-token")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> GetUserOrdersByToken()
+        {
+            var userId = await _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
+            
+            var orders = await _orderService.GetAllUserOrdersAsync(userId);
+
+            var filteredOrders = orders.Select(o => o.ToReadOrderDTO());
+
+            return Ok(filteredOrders);
+        }
+
+        private async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> TryGetUserOrders(Guid userId)
+        {
+            var userOrders = await _orderService.GetAllUserOrdersAsync(userId.ToString());
 
             var filteredOrders = userOrders.Select(o => o.ToReadOrderDTO());
 
