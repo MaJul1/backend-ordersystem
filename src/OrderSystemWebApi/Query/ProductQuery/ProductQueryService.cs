@@ -1,7 +1,7 @@
 using OrderSystemWebApi.Models;
 using OrderSystemWebApi.Query.Service;
 
-namespace OrderSystemWebApi.Query;
+namespace OrderSystemWebApi.Query.ProductQuery;
 
 public static class ProductQueryService
 {
@@ -25,8 +25,11 @@ public static class ProductQueryService
     private static IEnumerable<Product> ApplySort(this IEnumerable<Product> products, ProductQueryOptions options)
     {
         var sortedProducts = products;
+
         sortedProducts = sortedProducts.SortCollection(p => p.Name, "name", options);
+
         sortedProducts = sortedProducts.SortCollection(p => p.Price, "price", options);
+        
         return sortedProducts;
     }
 }

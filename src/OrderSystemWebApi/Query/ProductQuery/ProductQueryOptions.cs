@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using OrderSystemWebApi.Interfaces.QueryInterfaces;
 
-namespace OrderSystemWebApi.Query;
+namespace OrderSystemWebApi.Query.ProductQuery;
 
 public class ProductQueryOptions : IPriceFilterOption, ISortOption, IPaginationOption
 {

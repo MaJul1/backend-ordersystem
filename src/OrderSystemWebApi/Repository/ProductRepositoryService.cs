@@ -4,6 +4,7 @@ using OrderSystemWebApi.DTO.Product;
 using OrderSystemWebApi.Interfaces;
 using OrderSystemWebApi.Mapper;
 using OrderSystemWebApi.Models;
+using OrderSystemWebApi.Query.ProductQuery;
 
 namespace OrderSystemWebApi.Repository;
 
@@ -36,9 +37,11 @@ public class ProductRepositoryService : IProductRepositoryService
         await _context.SaveChangesAsync();
     }
 
-    public IEnumerable<Product> GetAll()
+    public IEnumerable<Product> GetAll(ProductQueryOptions options)
     {
-        return _context.Products;
+        var products = _context.Products.ApplyQueryService(options);
+        
+        return products;
     }
 
     public async Task<Product?> GetByIdAsync(Guid id)
@@ -62,7 +65,7 @@ public class ProductRepositoryService : IProductRepositoryService
         return new ArgumentNullException($"'{type}' not found.");
     }
 
-    public async Task<List<Product>> GetRangeProductsByIdsAsync(Guid[] ids)
+    public async Task<List<Product>> GetRangeProductsByIdAsync(Guid[] ids)
     {
         if (ids == null || ids.Length == 0)
             return [];
@@ -72,4 +75,7 @@ public class ProductRepositoryService : IProductRepositoryService
 
         return await products.ToListAsync();
     }
+
+    public IEnumerable<Product> GetAll() =>
+        GetAll(new ProductQueryOptions());
 }

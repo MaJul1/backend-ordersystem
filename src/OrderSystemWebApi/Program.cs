@@ -1,41 +1,20 @@
-using OrderSystemWebApi.Services;
+using OrderSystemWebApi;
+using Serilog;
+using Serilog.Core;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
 
-// Add services to the container.
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
-
-builder.ConfigureSwagger();
-builder.ConfigureDatabase();
-builder.ConfigureIdentity();
-builder.ConfigureAppSettingJsons();
-builder.ConfigureCustomServices();
-builder.ConfigureJwtAuthentication();
-
-builder.Services.AddAuthorization();
-builder.Services.AddLogging();
-
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+try 
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options => {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty;
-    });
+    await Startup.InitializeApplication(args);
 }
-
-app.MapControllers();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseHttpsRedirection();
-
-await app.UseRoles();
-
-app.Run();
+catch (Exception e)
+{
+    Log.Fatal($"Fatal error{e.Message}");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

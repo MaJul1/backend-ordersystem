@@ -22,9 +22,7 @@ public class OrderRepositoryService : IOrderRepositoryService
 
     public async Task<Order> CreateOrder(OrderRequestDTO request, string userId)
     {
-        var productIds = request.ProductIds;
-
-        var products = await _productService.GetRangeProductsByIdsAsync(productIds);
+        var products = await GetProductsById(request.ProductIds);
 
         if (products.Count == 0)
             throw new ArgumentNullException(nameof(request), "ProductIds should not be null or empty.");
@@ -71,5 +69,10 @@ public class OrderRepositoryService : IOrderRepositoryService
             .FirstOrDefault(o => o.Id == id);
 
         return await Task.FromResult(order);
+    }
+
+    private async Task<ICollection<Product>> GetProductsById(Guid[] productIds)
+    {
+        return await _productService.GetRangeProductsByIdAsync(productIds);
     }
 }
