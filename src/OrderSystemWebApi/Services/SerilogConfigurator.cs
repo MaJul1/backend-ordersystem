@@ -1,5 +1,7 @@
 using System;
 using Serilog;
+using Serilog.Configuration;
+using Serilog.Filters;
 namespace OrderSystemWebApi.Services;
 
 public static class SerilogConfigurator

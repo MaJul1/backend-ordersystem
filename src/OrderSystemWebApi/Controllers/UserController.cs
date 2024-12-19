@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using OrderSystemWebApi.DTO.User;
 using OrderSystemWebApi.Interfaces;
 using OrderSystemWebApi.Mapper;
+using Serilog;
 
 namespace OrderSystemWebApi.Controllers
 {
@@ -13,11 +14,19 @@ namespace OrderSystemWebApi.Controllers
         private readonly IUserRepositoryService _userService;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IProblemService _problemService;
-        public UserController(IUserRepositoryService userService, IJwtTokenService jwtTokenService, IProblemService problemService)
+        private readonly ILogger<UserController> _logger;
+        public UserController
+        (
+            IUserRepositoryService userService, 
+            IJwtTokenService jwtTokenService, 
+            IProblemService problemService,
+            ILogger<UserController> logger
+        )
         {
             _userService = userService;
             _jwtTokenService = jwtTokenService;
             _problemService = problemService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -37,6 +46,8 @@ namespace OrderSystemWebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<LogInResponse>> LogIn([FromBody] LogInRequest request)
         {
+            _logger.LogInformation("Test log");
+            
             var user = await _userService.LogInUserAsync(request);
 
             if (user == null)

@@ -45,10 +45,14 @@ namespace OrderSystemWebApi.Controllers
         /// <response code="200">If the order creation is successful.</response>
         /// <response code="400">If the request contains invalid arguments.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="500">If there is something not working on the server.</response>
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> CreateOrder([FromBody] OrderRequestDTO request)
         {
+            var userId = _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
+            _logger.LogInformation("[{RequestPath}]: User {UserId} is attempting to create an order with details: {@OrderRequest}", Request.Path, userId, request);
+
             try
             {
                 return await TryCreateOrderAsync(request);
@@ -56,6 +60,11 @@ namespace OrderSystemWebApi.Controllers
             catch (ArgumentException e)
             {
                 return BadRequest(_problemService.CreateBadRequestProblemDetails(e.Message, Request.Path));
+            }
+            catch (Exception e)
+            {
+                _logger.LogCritical("{@e}", e);
+                return StatusCode(500, _problemService.CreateInternalServerErrorProblemDetails([e.Message], Request.Path));
             }
         }
 
@@ -73,9 +82,26 @@ namespace OrderSystemWebApi.Controllers
         /// <response code="200">If the request is successful and returns the list of orders.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403"> If the user is authenticated but does not have the admin or moderator role.</response>
+        /// <response code="500">If there is something not working on the server.</response>
         [HttpGet("all-orders")]
         [Authorize(Roles = "Admin,Moderator")]
         public async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> GetAllOrders()
+        {
+            var userId = await _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
+            _logger.LogInformation("[{RequestPath}]: User {UserId} is attempting to get all orders.", Request.Path, userId);
+
+            try
+            {
+                return await GetAllOrdersAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogCritical("{@e}", e);
+                return StatusCode(500, _problemService.CreateInternalServerErrorProblemDetails([e.Message], Request.Path));
+            }
+        }
+
+        private async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> GetAllOrdersAsync()
         {
             var orders = await _orderService.GetAllOrdersAsync();
 
