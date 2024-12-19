@@ -14,6 +14,5 @@ public static class CustomServicesConfigurator
         builder.Services.AddScoped<IOrderRepositoryService, OrderRepositoryService>();
         builder.Services.AddScoped<IControllerServices, ControllerService>();
         builder.Services.AddScoped<IProblemService, ProblemDetailsService>();
-        builder.Services.AddScoped<ILoggerService, LoggerService>();
     }
 }

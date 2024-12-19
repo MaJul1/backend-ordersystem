@@ -14,13 +14,11 @@ namespace OrderSystemWebApi.Controllers
     {
         private readonly IProductRepositoryService _productService;
         private readonly IProblemService _problemService;
-        private readonly ILoggerService _logger;
 
-        public ProductController(IProductRepositoryService productService, IProblemService problemService, ILoggerService logger)
+        public ProductController(IProductRepositoryService productService, IProblemService problemService)
         {
             _productService = productService;
             _problemService = problemService;
-            _logger = logger;
         }
 
 
@@ -39,7 +37,6 @@ namespace OrderSystemWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ReadProductRequestDTO>>> GetAll([FromQuery] ProductQueryOptions options)
         {
-            await _logger.LogRequestInformation(Request, "Get all product request.");
             try 
             {
                 return await GetAllAsync(options);

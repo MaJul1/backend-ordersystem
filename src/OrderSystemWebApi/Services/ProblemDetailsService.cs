@@ -17,6 +17,9 @@ public class ProblemDetailsService : IProblemService
         return CreateProblemDetails(StatusCodes.Status500InternalServerError, "Internal Server Error", detail, path);
     }
 
+    public ProblemDetails CreateInternalServerErrorProblemDetails(string details, string path) =>
+        CreateInternalServerErrorProblemDetails([details], path);
+
     public ProblemDetails CreateNotFoundProblemDetails(string detail, string path)
     {
         return CreateProblemDetails(StatusCodes.Status404NotFound, "Not found", detail, path);

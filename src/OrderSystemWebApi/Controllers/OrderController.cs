@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using OrderSystemWebApi.DTO.Order;
 using OrderSystemWebApi.Interfaces;
 using OrderSystemWebApi.Mapper;
-using OrderSystemWebApi.Models;
 
 namespace OrderSystemWebApi.Controllers
 {
@@ -14,13 +13,13 @@ namespace OrderSystemWebApi.Controllers
         private readonly IOrderRepositoryService _orderService;
         private readonly IControllerServices _controllerService;
         private readonly IProblemService _problemService;
-        private readonly ILogger _logger;
+        private readonly ILogger<OrderController> _logger;
         public OrderController
         (
             IOrderRepositoryService orderRepositoryService,
             IControllerServices controllerServices,
             IProblemService problemService,
-            ILogger logger
+            ILogger<OrderController> logger
         )
         {
             _orderService = orderRepositoryService;
@@ -50,21 +49,17 @@ namespace OrderSystemWebApi.Controllers
         [Authorize]
         public async Task<IActionResult> CreateOrder([FromBody] OrderRequestDTO request)
         {
-            var userId = _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
-            _logger.LogInformation("[{RequestPath}]: User {UserId} is attempting to create an order with details: {@OrderRequest}", Request.Path, userId, request);
-
             try
             {
-                return await TryCreateOrderAsync(request);
+                return await ProcessOrderCreationAsync(request);
             }
             catch (ArgumentException e)
             {
-                return BadRequest(_problemService.CreateBadRequestProblemDetails(e.Message, Request.Path));
+                return await LogAndReturnBadRequestForOrderCreationAsync(e, request);
             }
             catch (Exception e)
             {
-                _logger.LogCritical("{@e}", e);
-                return StatusCode(500, _problemService.CreateInternalServerErrorProblemDetails([e.Message], Request.Path));
+                return LogAndReturnInternalServerError(e);
             }
         }
 
@@ -87,27 +82,14 @@ namespace OrderSystemWebApi.Controllers
         [Authorize(Roles = "Admin,Moderator")]
         public async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> GetAllOrders()
         {
-            var userId = await _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
-            _logger.LogInformation("[{RequestPath}]: User {UserId} is attempting to get all orders.", Request.Path, userId);
-
             try
             {
-                return await GetAllOrdersAsync();
+                return await FetchAllOrdersAsync();
             }
             catch (Exception e)
             {
-                _logger.LogCritical("{@e}", e);
-                return StatusCode(500, _problemService.CreateInternalServerErrorProblemDetails([e.Message], Request.Path));
+                return LogAndReturnInternalServerError(e);
             }
-        }
-
-        private async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> GetAllOrdersAsync()
-        {
-            var orders = await _orderService.GetAllOrdersAsync();
-
-            var FilteredOrders = orders.Select(o => o.ToReadOrderDTO());
-
-            return Ok(FilteredOrders);
         }
 
         /// <summary>
@@ -126,16 +108,19 @@ namespace OrderSystemWebApi.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user is authenticated but does not have the admin or moderator role.</response>
         /// <response code="404">If the order is not found.</response>
+        /// <response code="500">If there is something not working on the server.</response>
         [HttpGet("order-by-id")]
         [Authorize(Roles = "Admin,Moderator")]
         public async Task<ActionResult<ReadOrderRequestDTO>> GetOrderById([FromQuery] Guid id)
         {
-            var order = await _orderService.GetOrderById(id);
-
-            if (order == null)
-                return NotFound(_problemService.CreateNotFoundProblemDetails($"Order with an id of {id} is not found.", Request.Path));
-
-            return Ok(order.ToReadOrderDTO());
+            try
+            {
+                return await FetchOrderByIdAsync(id);
+            }
+            catch (Exception e)
+            {
+                return LogAndReturnInternalServerError(e);
+            }
         }
 
         /// <summary>
@@ -155,13 +140,14 @@ namespace OrderSystemWebApi.Controllers
         /// <response code="400">If the user ID is invalid.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user is authenticated but does not have the admin or moderator role.</response>
+        /// <response code="500">If there is something not working on the server.</response>
         [HttpGet("orders-by-user-id")]
         [Authorize(Roles = "Admin,Moderator")]
         public async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> GetUserOrders([FromQuery] Guid userId)
         {
             try
             {
-                return await TryGetUserOrders(userId);
+                return await FetchUserOrdersAsync(userId);
             }
             catch (ArgumentException e)
             {
@@ -182,9 +168,22 @@ namespace OrderSystemWebApi.Controllers
         /// </remarks>
         /// <response code="200">If the request is successful and returns the list of orders.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// /// <response code="500">If there is something not working on the server.</response>
         [HttpGet("orders-by-token")]
         [Authorize]
         public async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> GetUserOrdersByToken()
+        {
+            try
+            {
+                return await FetchUserOrderByTokenAsync();
+            }
+            catch (Exception e)
+            {
+                return LogAndReturnInternalServerError(e);
+            }
+        }
+
+        private async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> FetchUserOrderByTokenAsync()
         {
             var userId = await _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
 
@@ -192,25 +191,76 @@ namespace OrderSystemWebApi.Controllers
 
             var filteredOrders = orders.Select(o => o.ToReadOrderDTO());
 
+            _logger.LogInformation("[{RequestPath}] User {UserId} fetch his own orders.", Request.Path, userId);
+
             return Ok(filteredOrders);
         }
 
-        private async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> TryGetUserOrders(Guid userId)
+        private async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> FetchUserOrdersAsync(Guid userId)
         {
+            var userWhoRequest = _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
+
             var userOrders = await _orderService.GetAllUserOrdersAsync(userId.ToString());
 
             var filteredOrders = userOrders.Select(o => o.ToReadOrderDTO());
 
+            _logger.LogInformation("[{RequestPath}] User {UserId} get all orders of user {userId}", Request.Path, userWhoRequest, userId);
+
             return Ok(filteredOrders);
         }
 
-        private async Task<IActionResult> TryCreateOrderAsync(OrderRequestDTO request)
+        private async Task<IActionResult> ProcessOrderCreationAsync(OrderRequestDTO request)
         {
             var userId = await _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
 
             await _orderService.CreateOrder(request, userId);
 
+            _logger.LogInformation("[{RequestPath}] User {userId} is creating an order with details: {@details}", Request.Path, userId, request);
+
             return Ok("Order created.");
+        }
+
+        private async Task<ActionResult<IEnumerable<ReadOrderRequestDTO>>> FetchAllOrdersAsync()
+        {
+            var userId = _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
+
+            var orders = await _orderService.GetAllOrdersAsync();
+
+            var FilteredOrders = orders.Select(o => o.ToReadOrderDTO());
+
+            _logger.LogInformation("[{RequestPath}] User {UserId} get all orders record.", Request.Path, userId);
+
+            return Ok(FilteredOrders);
+        }
+
+        private async Task<ActionResult<ReadOrderRequestDTO>> FetchOrderByIdAsync(Guid id)
+        {
+            var userId = _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
+
+            var order = await _orderService.GetOrderById(id);
+
+            if (order == null)
+                return NotFound(_problemService.CreateNotFoundProblemDetails($"Order with an id of {id} is not found.", Request.Path));
+
+            _logger.LogInformation("[{RequestPath}] User {UserId} fetch an order by id with details {id}", Request.Path, userId, id);
+            
+            return Ok(order.ToReadOrderDTO());
+        }
+
+        private ObjectResult LogAndReturnInternalServerError(Exception e)
+        {
+            _logger.LogCritical("{@e}", e);
+
+            return StatusCode(500, _problemService.CreateInternalServerErrorProblemDetails(e.Message, Request.Path));
+        } 
+
+        private async Task<BadRequestObjectResult> LogAndReturnBadRequestForOrderCreationAsync(ArgumentException e, OrderRequestDTO request)
+        {
+            var userid = await _controllerService.GetUserIdFromAuthorizationHeaderAsync(Request);
+
+            _logger.LogInformation("[{RequestPath}] User {userId} failed to create an order with a message: '{message}' with request details: {@OrderDetails}", Request.Path, userid, e.Message, request);
+
+            return BadRequest(_problemService.CreateBadRequestProblemDetails(e.Message, Request.Path));
         }
     }
 }
